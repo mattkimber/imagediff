@@ -77,7 +77,8 @@ func ApplyDiff(original image.Image, diff image.Image) (image.Image, error) {
 
 	for x := original.Bounds().Min.X; x < original.Bounds().Max.X; x++ {
 		for y := original.Bounds().Min.Y; y < original.Bounds().Max.Y; y++ {
-			if diff.At(x,y) != transparent {
+			_,_,_,a := diff.At(x ,y).RGBA()
+			if diff.At(x,y) != transparent && a != 0 {
 				output.Set(x, y, diff.At(x,y))
 			} else {
 				output.Set(x, y, original.At(x,y))
