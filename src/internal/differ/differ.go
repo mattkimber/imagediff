@@ -10,9 +10,11 @@ import (
 	"os"
 )
 
-func GetDiff(original image.Image, new image.Image) (image.Image, error) {
+func GetDiff(original image.Image, new image.Image) (image.Image, bool, error) {
+	different := false
+
 	if original.Bounds() != new.Bounds() {
-		return nil, fmt.Errorf("image bounds do not match")
+		return nil, false, fmt.Errorf("image bounds do not match")
 	}
 
 	indexed := false
@@ -34,12 +36,13 @@ func GetDiff(original image.Image, new image.Image) (image.Image, error) {
 	for x := original.Bounds().Min.X; x < original.Bounds().Max.X; x++ {
 		for y := original.Bounds().Min.Y; y < original.Bounds().Max.Y; y++ {
 			if original.At(x,y) != new.At(x,y) {
+				different = true
 				output.Set(x, y, new.At(x,y))
 			}
 		}
 	}
 
-	return output, nil
+	return output, different, nil
 }
 
 
@@ -158,16 +161,18 @@ func Generate(inputDir string, compareDir string, outputDir string) error {
 			continue
 		}
 
-		result, err := GetDiff(input, edited)
+		result, different, err := GetDiff(input, edited)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			continue
 		}
 
-		err = WriteImageFile(result, outputDir + "/" + file.Name())
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			continue
+		if different {
+			err = WriteImageFile(result, outputDir+"/"+file.Name())
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				continue
+			}
 		}
 
 	}
